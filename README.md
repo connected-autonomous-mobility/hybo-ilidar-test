@@ -64,5 +64,5 @@ left & right view
 ### Accuracy
 Just measured the the distance to the wall and got *2.5m* (2.8m is the distance to the wall) in the imperfect environment of my room. Needs more testing...
 
-### Recordings
-Those need to bee checked.
+### [Recordings](recordings)
+Those need to be checked.
