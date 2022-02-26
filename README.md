@@ -50,7 +50,7 @@ chmod +x iViewer
 ```
 
 ### Setting up the connection
-enter the USB port from above, set bad rate to 921600, connect the sensor and have fun!
+enter the USB port from above, set baud rate to *921600*, connect the sensor and have fun!
 ![](images/ilidar-settings.png)
 
 ### Sample
