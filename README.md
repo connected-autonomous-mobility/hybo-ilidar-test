@@ -1,7 +1,8 @@
 # hybo-ilidar-test
-setting up &amp; testing hybo.co iLidar https://www.hybo.co/%EB%B3%B5%EC%A0%9C-product
+- [x] setting up &amp; testing hybo.co iLidar https://www.hybo.co/%EB%B3%B5%EC%A0%9C-product
 ![](images/ilidar-room-sample1.png)
 on Ubuntu 18.04 LTS
+- [x] [github](https://github.com/hybo-ilidar)
 
 ## 1 Installation
 
