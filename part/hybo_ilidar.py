@@ -1,5 +1,5 @@
 """
-Hybo based on lidar.py
+hybo_ilidar based on lidar.py
 """
 #
 # requies glob to be installed: "pip3 install glob2"
@@ -19,37 +19,11 @@ from PIL import Image, ImageDraw
 
 import time
 import hybo
-#from hybo import Lidar
 
-logger = logging.getLogger("donkeycar.parts.hybo")
+logger = logging.getLogger("donkeycar.parts.hybo_ilidar")
 
-CLOCKWISE = 1
-COUNTER_CLOCKWISE = -1
 SERIAL_DEV = '/dev/ttyUSB0'
 
-
-def limit_angle(angle):
-    """
-    make sure angle is 0 <= angle <= 360
-    """
-    while angle < 0:
-        angle += 360
-    while angle > 360:
-        angle -= 360
-    return angle
-
-
-def angle_in_bounds(angle, min_angle, max_angle):
-    """
-    Determine if an angle is between two other angles.
-    """
-    if min_angle <= max_angle:
-        return min_angle <= angle <= max_angle
-    else:
-        # If min_angle < max_angle then range crosses
-        # zero degrees, so break up test
-        # into two ranges
-        return (min_angle <= angle <= 360) or (max_angle >= angle >= 0)
 
 class HyboLidar(object):
     '''
@@ -97,7 +71,6 @@ class HyboLidar(object):
         self.full_scan_count = 0
         self.full_scan_index = 0
         self.total_measurements = 0
-        #self.iter_measurements = self.lidar.iter_measurements()
         self.measurement_batch_ms = batch_ms
         self.measurements = []
 
@@ -115,8 +88,12 @@ class HyboLidar(object):
                 #sequence  = raw_scan["sequence"]
                 #time_peak = raw_scan["time_peak"]
                 #distance  = raw_scan["points"]
-                #new_scan  = raw_scan["points"]
+                new_scan  = raw_scan["points"]
                 self.measurements.append(raw_scan)
+
+                # test: show all points
+                for point in new_scan:
+                    print(point)
                                         
                 now = time.time()
                 self.total_measurements += 1
@@ -172,6 +149,79 @@ class HyboLidar(object):
             self.hybo.close()
             self.hybo = None
 
+class HyboLidarPlot(object):
+    '''
+    based on LidarPlot2
+    takes the lidar measurements as a list of (distance, angle) tuples
+    and plots them to a PIL image which it outputs
+    
+    resolution: dimensions of image in pixels as tuple (width, height)
+    plot_type: PLOT_TYPE_CIRC or PLOT_TYPE_LINE
+    mark_px: size of data measurement marks in pixels
+    max_dist: polar bounds; clip measures whose distance > max_dist
+    angle_direction: direction of increasing angles in the data;
+                     CLOCKWISE or COUNTER_CLOCKWISE
+    rotate_plot: angle in positive degrees to rotate the measurement mark.
+                 this can be used to match the direction of the robot
+                 when it is plotted in world coordinates.
+    '''
+    PLOT_TYPE_LINE = 0
+    PLOT_TYPE_CIRCLE = 1
+    def __init__(self,
+                 resolution=(500,500),
+                 plot_type=PLOT_TYPE_CIRCLE,
+                 mark_px=3,
+                 max_dist=4000, #mm
+                 rotate_plot=0,
+                 background_color=(224, 224, 224),
+                 border_color=(128, 128, 128),
+                 point_color=(255, 64, 64)):
+        
+        self.frame = Image.new('RGB', resolution)
+        self.mark_px = mark_px
+        self.max_distance = max_dist
+        self.resolution = resolution
+        if plot_type == self.PLOT_TYPE_CIRCLE:
+            self.mark_fn = mark_circle
+        else:
+            self.mark_fn = mark_line
+        self.angle_direction = angle_direction
+        self.rotate_plot = rotate_plot
+        
+        self.background_color = background_color
+        self.border_color = border_color
+        self.point_color = point_color
+
+    def run(self, measurements):
+        '''
+        draw measurements to a PIL image and output the pil image
+        measurements: list of cartesian coordinates as (x,y,z) tuples
+        '''
+            
+        self.frame = Image.new('RGB', self.resolution, (255, 255, 255))
+        bounds = (0, 0, self.frame.width, self.frame.height)
+        draw = ImageDraw.Draw(self.frame)
+        
+        # background
+        draw.rectangle(bounds, fill=self.background_color)
+
+        # bounding perimeter and zero heading
+        plot_polar_bounds(draw, bounds, self.border_color,
+                          self.angle_direction, self.rotate_plot)
+        plot_polar_angle(draw, bounds, self.border_color, 0,
+                         self.angle_direction, self.rotate_plot)
+        
+        # data points
+        plot_polar_points(
+            draw, bounds, self.mark_fn, self.point_color, self.mark_px,
+            [(distance, angle) for distance, angle, _, _, _ in measurements],
+            self.max_distance, self.angle_direction, self.rotate_plot)
+        
+        return self.frame
+
+    def shutdown(self):
+        pass
+
 
 if __name__ == "__main__":
     import argparse
@@ -202,8 +252,6 @@ if __name__ == "__main__":
                         help="Maximum distance (inclusive) to save")
     parser.add_argument("-f", "--forward-angle", type=float, default=0.0,
                         help="Forward angle - the angle facing 'forward'")
-    parser.add_argument("-s", "--angle-direction", type=int, default=COUNTER_CLOCKWISE,  # noqa
-                        help="direction of increasing angles (1 is clockwise, -1 is counter-clockwise)")  # noqa
     parser.add_argument("-p", "--rotate-plot", type=float, default=0.0,
                         help="Angle in degrees to rotate plot on cartesian plane")  # noqa
     parser.add_argument("-t", "--threaded", action='store_true', help = "run in threaded mode")
@@ -232,11 +280,7 @@ if __name__ == "__main__":
       
     if args.forward_angle < 0 or args.forward_angle > 360:
         help.append("-f/--forward-angle must be 0 <= forward-angle <= 360")
-        
-    if args.angle_direction != CLOCKWISE and \
-       args.angle_direction != COUNTER_CLOCKWISE:
-        help.append("-s/--angle-direction must be 1 (clockwise) or -1 (counter-clockwise)")  # noqa
-        
+           
     if args.rotate_plot < 0 or args.rotate_plot > 360:
         help.append("-p/--rotate-plot must be 0 <= min-angle <= 360")
         
