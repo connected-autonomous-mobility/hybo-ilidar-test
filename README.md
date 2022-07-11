@@ -67,3 +67,5 @@ Just measured the the distance to the wall and got *2.5m* (2.8m is the distance 
 
 ### [Recordings](recordings)
 Those need to be checked.
+
+### [Coordinate System](https://github.com/hybo-ilidar/docs/blob/master/draft-hardware-user-interface-2020-02-21.md)
