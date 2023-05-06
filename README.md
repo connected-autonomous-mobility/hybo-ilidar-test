@@ -69,3 +69,18 @@ Just measured the the distance to the wall and got *2.5m* (2.8m is the distance 
 Those need to be checked.
 
 ### [Coordinate System](https://github.com/hybo-ilidar/docs/blob/master/draft-hardware-user-interface-2020-02-21.md)
+
+## fixes 
+- if original repo was not forked
+    ```
+    git remote set-url origin [new_remote_repository_URL]
+    ```
+- run into error when visualizing (thx to gpt4!)
+
+    needed fix in code installed by ```pip install hybo``` which is located ```python -c "import site; print(site.getsitepackages())"``` and actually located here: ```['/home/rainer/mambaforge/envs/donkey/lib/python3.9/site-packages/hybo/']```
+
+## [examples](./examples/)
+![visualization](./images/rbx-simple-vis.png)
+```
+python examples/rbx-simple-vis.py
+```
