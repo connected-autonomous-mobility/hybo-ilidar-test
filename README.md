@@ -22,6 +22,11 @@ sudo apt-get update
 sudo apt-get install libserialport0
 ```
 
+### [python bindings](https://github.com/Heavy02011/hybo)
+```
+pip install hybo
+```
+
 
 ## 2 Identifying the iLidar on the USB port
 ```
